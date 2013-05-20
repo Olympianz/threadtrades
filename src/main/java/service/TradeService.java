@@ -16,7 +16,14 @@ import java.util.concurrent.locks.ReentrantLock;
  * Date: 5/19/13
  * Time: 7:13 PM
  */
+
+//TODO: This is for bulk bids and offers. Another case is bids and offers check for available trade partners at arrival time.
 public class TradeService {
+
+
+    //TODO Data should come from Client.
+
+    //TODO: HardCoded data should move to the test class
 
     private Stock[] stocks = new Stock[2];
     private Broker[] buyers = new Broker[2];
@@ -27,6 +34,7 @@ public class TradeService {
     private int stocksLength;
 
 
+    //TODO: Number of comparison iterations is huge compared to insertions. So CopyOnWriteArraySet is used
     private CopyOnWriteArraySet<Trade> matchedTrades = new CopyOnWriteArraySet<Trade>();
 
     List<Bid> bids = new LinkedList<Bid>();
@@ -90,6 +98,7 @@ public class TradeService {
                                 if(matches(bid, offer)){
                                     Trade trade = createTrade(bid, offer);
                                     deleteBidAndOffer(bid, offer);
+                                    // TODO: Should be removed and matchedTrades be used
                                     System.out.println("Seller " + trade.getSeller().getName() + " Buyer " + trade.getBuyer().getName() + " Stock " +
                                             trade.getStock().getCode() + " Price " + trade.getPrice() + " Buyer Price " + bid.getPrice() + " at " + trade.getTradeDate());
                                 }
@@ -110,6 +119,7 @@ public class TradeService {
             System.out.println("Offers size " + offers.size()) ;
             System.out.println("Bids size " + bids.size());
 
+            //TODO: Replace by a logic to keep data in DB
             for(Offer offer: offers){
                 System.out.println("Offer is Seller " + offer.getSeller().getName() + " Price " + offer.getPrice() + " Stock " + offer.getStock().getCode());
             }
@@ -208,6 +218,7 @@ public class TradeService {
         trade.setStock(bid.getStock());
         trade.setTradeDate(new Date());
 
+        //TODO: This should be processed instead of printing out the result
         matchedTrades.add(trade);
         return trade;
     }
