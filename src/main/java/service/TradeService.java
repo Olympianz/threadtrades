@@ -2,10 +2,8 @@ package service;
 
 import com.hm.model.*;
 
-import java.util.Date;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -20,19 +18,9 @@ import java.util.concurrent.locks.ReentrantLock;
 //TODO: This is for bulk bids and offers. Another case is bids and offers check for available trade partners at arrival time.
 public class TradeService {
 
-
-    //TODO Data should come from Client.
-
-    //TODO: HardCoded data should move to the test class
-
-    private Stock[] stocks = new Stock[2];
-    private Broker[] buyers = new Broker[2];
-    private Broker[] sellers = new Broker[2];
-
-    private int buyersLength;
-    private int sellersLength;
-    private int stocksLength;
-
+    private Stock[] stocks;
+    private Broker[] buyers;
+    private Broker[] sellers;
 
     //TODO: Number of comparison iterations is huge compared to insertions. So CopyOnWriteArraySet is used
     private CopyOnWriteArraySet<Trade> matchedTrades = new CopyOnWriteArraySet<Trade>();
@@ -43,39 +31,35 @@ public class TradeService {
     Lock bidsLock = new ReentrantLock();
     Lock offersLock = new ReentrantLock();
 
-    //TODO: Data should come from the client
-    private void setUp(){
-        Stock googleStock = new Stock();
-        googleStock.setCode("Goog");
+    public static Map<String, List<Pricing>> bidsAndOffersByProduct = new ConcurrentHashMap<String, List<Pricing>>();
 
-        Stock amazonStock = new Stock();
-        amazonStock.setCode("AMZ");
+    public void setStocks(Stock[] stocks) {
+        this.stocks = stocks;
+    }
 
-        stocks[0] = googleStock;
-        stocks[1] = amazonStock;
+    public void setSellers(Broker[] sellers) {
+        this.sellers = sellers;
+    }
 
-        Broker buyer = new Broker();
-        buyer.setName("J P Morgan");
+    public void setBuyers(Broker[] buyers) {
+        this.buyers = buyers;
+    }
 
-        Broker buyerTwo = new Broker();
-        buyerTwo.setName("Morgan Stanley");
+    //TODO: After moving stockCode and Price to Pricing class refactor this
+    public void setBid(Bid bid){
+        String stockCode = bid.getStock().getCode();
+        List<Pricing> pricings = bidsAndOffersByProduct.get(stockCode);
+        pricings.add(bid);
+        bidsAndOffersByProduct.put(stockCode, pricings);
+        //TODO: must be refactored. Conditions in condurrent package must be used.
+        tradeMatcher();
+    }
 
-        buyers[0] = buyer;
-        buyers[1] = buyerTwo;
-
-        Broker seller = new Broker();
-        seller.setName("Goldman Sachs");
-
-        Broker sellerTwo = new Broker();
-        sellerTwo.setName("Barclays");
-
-        sellers[0] = seller;
-        sellers[1] = sellerTwo;
-
-        buyersLength = buyers.length;
-        sellersLength = sellers.length;
-        stocksLength = stocks.length;
-
+    public void setOffer(Offer offer){
+        String stockCode = offer.getStock().getCode();
+        List<Pricing> pricings = bidsAndOffersByProduct.get(stockCode);
+        pricings.add(offer);
+        bidsAndOffersByProduct.put(stockCode, pricings);
         tradeMatcher();
     }
 
@@ -84,9 +68,8 @@ public class TradeService {
             @Override
             public void run() {
                 long begin = System.currentTimeMillis();
+                //TODO: It should not be stopped.
                 while ((System.currentTimeMillis() - begin) < 1000){
-                    generateBid();
-                    generateOffer();
                     try{
                         offersLock.lock();
                         bidsLock.lock();
@@ -152,62 +135,62 @@ public class TradeService {
         }
     }
 
-    public void generateOffer(){
-
-        Thread thread = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                Random random = new Random();
-
-                Broker seller = sellers[random.nextInt(sellersLength)];
-                Stock stock = stocks[random.nextInt(stocksLength)];
-                int generatedPrice = random.nextInt(100);
-
-                Offer offer = new Offer();
-
-                offer.setSeller(seller);
-                offer.setStock(stock);
-                offer.setPrice(generatedPrice);
-
-                try{
-                    offersLock.lock();
-                    offers.add(offer);
-                } finally {
-                    offersLock.unlock();
-                }
-
-            }
-        });
-        thread.start();
-    }
+//    public void generateOffer(){
+//
+//        Thread thread = new Thread(new Runnable() {
+//            @Override
+//            public void run() {
+//                Random random = new Random();
+//
+//                Broker seller = sellers[random.nextInt(sellersLength)];
+//                Stock stock = stocks[random.nextInt(stocksLength)];
+//                int generatedPrice = random.nextInt(100);
+//
+//                Offer offer = new Offer();
+//
+//                offer.setSeller(seller);
+//                offer.setStock(stock);
+//                offer.setPrice(generatedPrice);
+//
+//                try{
+//                    offersLock.lock();
+//                    offers.add(offer);
+//                } finally {
+//                    offersLock.unlock();
+//                }
+//
+//            }
+//        });
+//        thread.start();
+//    }
 
     //TODO: Each Buyer should have its own Thread for, otherwise system does not reflect high or low demand and changes in Prices
-    public void generateBid(){
-        Thread thread = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                Random random = new Random();
-
-                Broker buyer = buyers[random.nextInt(buyersLength)];
-                Stock stock = stocks[random.nextInt(stocksLength)];
-                int generatedPrice = random.nextInt(100);
-
-                Bid bid = new Bid();
-
-                bid.setBuyer(buyer);
-                bid.setStock(stock);
-                bid.setPrice(generatedPrice);
-
-                try{
-                    bidsLock.lock();
-                    bids.add(bid);
-                } finally {
-                    bidsLock.unlock();
-                }
-            }
-        });
-        thread.start();
-    }
+//    public void generateBid(){
+//        Thread thread = new Thread(new Runnable() {
+//            @Override
+//            public void run() {
+//                Random random = new Random();
+//
+//                Broker buyer = buyers[random.nextInt(buyersLength)];
+//                Stock stock = stocks[random.nextInt(stocksLength)];
+//                int generatedPrice = random.nextInt(100);
+//
+//                Bid bid = new Bid();
+//
+//                bid.setBuyer(buyer);
+//                bid.setStock(stock);
+//                bid.setPrice(generatedPrice);
+//
+//                try{
+//                    bidsLock.lock();
+//                    bids.add(bid);
+//                } finally {
+//                    bidsLock.unlock();
+//                }
+//            }
+//        });
+//        thread.start();
+//    }
 
     private Trade createTrade(Bid bid, Offer offer) {
         Trade trade = new Trade();
@@ -228,13 +211,6 @@ public class TradeService {
         if (bid.getStock() == offer.getStock() && offer.getPrice() >= bid.getPrice()){
             return true;
         }
-
         return false;
     }
-
-    public static void main(String[] args) {
-        TradeService tradeService = new TradeService();
-        tradeService.setUp();
-    }
-
 }
