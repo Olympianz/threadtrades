@@ -6,7 +6,7 @@ package com.hm.model;
  * Date: 5/19/13
  * Time: 7:28 PM
  */
-public class Offer {
+public class Offer implements Pricing{
 
     private Broker seller;
     private Stock stock;

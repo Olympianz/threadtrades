@@ -6,10 +6,11 @@ package com.hm.model;
  * Date: 5/19/13
  * Time: 7:27 PM
  */
-public class Bid {
+public class Bid implements Pricing{
 
     private Broker buyer;
 
+    //Todo: Move these two to parent class
     private Stock stock;
     private long price;
 
