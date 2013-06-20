@@ -74,6 +74,7 @@ public class TradeService {
                         offersLock.lock();
                         bidsLock.lock();
 
+                        //TODO: Performace would be really bad. O(N2) should turn into O(N)
                         for (int i=0; i<offers.size(); i++){
                             Offer offer = offers.get(i);
                             for(int j=0; j<bids.size();j++){
