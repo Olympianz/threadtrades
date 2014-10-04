@@ -112,12 +112,6 @@ public class TradeService {
                 System.out.println("Bid is Buyer " + bid.getBuyer().getName() + " Price " + bid.getPrice() + " Stock " + bid.getStock().getCode());
             }
 
-            for(Bid bid: bids){
-
-                System.out.println("Bid is Buyer " + bid.getBuyer().getName() + " Price " + bid.getPrice() + " Stock " + bid.getStock().getCode());
-            }
-
-
         } catch (InterruptedException e) {
             System.out.println(e);
         }
@@ -136,63 +130,6 @@ public class TradeService {
         }
     }
 
-//    public void generateOffer(){
-//
-//        Thread thread = new Thread(new Runnable() {
-//            @Override
-//            public void run() {
-//                Random random = new Random();
-//
-//                Broker seller = sellers[random.nextInt(sellersLength)];
-//                Stock stock = stocks[random.nextInt(stocksLength)];
-//                int generatedPrice = random.nextInt(100);
-//
-//                Offer offer = new Offer();
-//
-//                offer.setSeller(seller);
-//                offer.setStock(stock);
-//                offer.setPrice(generatedPrice);
-//
-//                try{
-//                    offersLock.lock();
-//                    offers.add(offer);
-//                } finally {
-//                    offersLock.unlock();
-//                }
-//
-//            }
-//        });
-//        thread.start();
-//    }
-
-    //TODO: Each Buyer should have its own Thread for, otherwise system does not reflect high or low demand and changes in Prices
-//    public void generateBid(){
-//        Thread thread = new Thread(new Runnable() {
-//            @Override
-//            public void run() {
-//                Random random = new Random();
-//
-//                Broker buyer = buyers[random.nextInt(buyersLength)];
-//                Stock stock = stocks[random.nextInt(stocksLength)];
-//                int generatedPrice = random.nextInt(100);
-//
-//                Bid bid = new Bid();
-//
-//                bid.setBuyer(buyer);
-//                bid.setStock(stock);
-//                bid.setPrice(generatedPrice);
-//
-//                try{
-//                    bidsLock.lock();
-//                    bids.add(bid);
-//                } finally {
-//                    bidsLock.unlock();
-//                }
-//            }
-//        });
-//        thread.start();
-//    }
-
     private Trade createTrade(Bid bid, Offer offer) {
         Trade trade = new Trade();
 
@@ -207,7 +144,7 @@ public class TradeService {
         return trade;
     }
 
-    private boolean matches(Bid bid, Offer offer) {
+    public boolean matches(Bid bid, Offer offer) {
 
         if (bid.getStock() == offer.getStock() && offer.getPrice() >= bid.getPrice()){
             return true;
